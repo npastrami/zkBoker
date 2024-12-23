@@ -71,38 +71,78 @@ class RoundState(namedtuple('_RoundState', ['button', 'street', 'final_street', 
         return RoundState(1, new_street, self.final_street, [0, 0], self.stacks, self.hands, self.deck, self)
 
     def proceed(self, action):
-        '''
-        Advances the game tree by one action performed by the active player.
-        '''
         active = self.button % 2
+        
         if isinstance(action, FoldAction):
-            delta = self.stacks[0] - STARTING_STACK if active == 0 else STARTING_STACK - self.stacks[1]
+            delta = (self.stacks[0] - STARTING_STACK 
+                    if active == 0 else STARTING_STACK - self.stacks[1])
             return TerminalState([delta, -delta], self)
-        if isinstance(action, CallAction):
-            if self.button == 0:  # sb calls bb
-                return RoundState(1, 0, self.final_street, [BIG_BLIND] * 2, 
-                                [STARTING_STACK - BIG_BLIND] * 2, self.hands, self.deck, self)
+        
+        elif isinstance(action, CallAction):
+            if self.button == 0:
+                # sb calls bb
+                return RoundState(
+                    button=1,
+                    street=0,
+                    final_street=self.final_street,
+                    pips=[BIG_BLIND] * 2,
+                    stacks=[STARTING_STACK - BIG_BLIND] * 2,
+                    hands=self.hands,
+                    deck=self.deck,
+                    previous_state=self
+                )
             new_pips = list(self.pips)
             new_stacks = list(self.stacks)
-            contribution = new_pips[1-active] - new_pips[active]
+            contribution = new_pips[1 - active] - new_pips[active]
             new_stacks[active] -= contribution
             new_pips[active] += contribution
-            state = RoundState(self.button + 1, self.street, self.final_street, 
-                             new_pips, new_stacks, self.hands, self.deck, self)
+            
+            state = RoundState(
+                button=self.button + 1,
+                street=self.street,
+                final_street=self.final_street,
+                pips=new_pips,
+                stacks=new_stacks,
+                hands=self.hands,
+                deck=self.deck,
+                previous_state=self
+            )
             return state.proceed_street()
-        if isinstance(action, CheckAction):
+        
+        elif isinstance(action, CheckAction):
             if (self.street == 0 and self.button > 0) or self.button > 1:
                 return self.proceed_street()
-            return RoundState(self.button + 1, self.street, self.final_street, 
-                            self.pips, self.stacks, self.hands, self.deck, self)
-        # isinstance(action, RaiseAction)
-        new_pips = list(self.pips)
-        new_stacks = list(self.stacks)
-        contribution = action.amount - new_pips[active]
-        new_stacks[active] -= contribution
-        new_pips[active] += contribution
-        return RoundState(self.button + 1, self.street, self.final_street, 
-                         new_pips, new_stacks, self.hands, self.deck, self)
+            return RoundState(
+                button=self.button + 1,
+                street=self.street,
+                final_street=self.final_street,
+                pips=self.pips,
+                stacks=self.stacks,
+                hands=self.hands,
+                deck=self.deck,
+                previous_state=self
+            )
+        
+        elif isinstance(action, RaiseAction):
+            new_pips = list(self.pips)
+            new_stacks = list(self.stacks)
+            contribution = action.amount - new_pips[active]
+            new_stacks[active] -= contribution
+            new_pips[active] += contribution
+            return RoundState(
+                button=self.button + 1,
+                street=self.street,
+                final_street=self.final_street,
+                pips=new_pips,
+                stacks=new_stacks,
+                hands=self.hands,
+                deck=self.deck,
+                previous_state=self
+            )
+
+        else:
+            # Fallback if for some reason 'action' is none of the above
+            raise ValueError(f"Unknown action type: {action}")
 
 
 class GameState:

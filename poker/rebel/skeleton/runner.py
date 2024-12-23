@@ -3,7 +3,7 @@ Infrastructure for interacting with the engine
 '''
 import argparse
 import socket
-from .actions import FoldAction, CallAction, CheckAction, RaiseAction
+from poker.game_engine import FoldAction, CallAction, CheckAction, RaiseAction
 from .states import GameState, TerminalState, RoundState
 from .states import STARTING_STACK, BIG_BLIND, SMALL_BLIND
 from .bot import Bot

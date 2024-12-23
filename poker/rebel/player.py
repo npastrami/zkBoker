@@ -1,4 +1,4 @@
-from .skeleton.actions import FoldAction, CallAction, CheckAction, RaiseAction
+from poker.game_engine import FoldAction, CallAction, CheckAction, RaiseAction
 from .skeleton.states import GameState, TerminalState, RoundState
 from .skeleton.states import NUM_ROUNDS, STARTING_STACK, BIG_BLIND, SMALL_BLIND
 from .skeleton.bot import Bot
