@@ -31,6 +31,13 @@ class PokerGameManager:
         self.deck.shuffle()
         player_cards = self.deck.deal(2)
         bot_cards = self.deck.deal(2)
+        deck = self.deck
+        
+        # [ADDED] Debug print to show which cards the bot was dealt
+        print(f"[DEBUG] Bot was dealt these cards: {bot_cards}")
+        
+        player_cards = [str(c) for c in player_cards]
+        bot_cards = [str(c) for c in bot_cards]
         
         # Determine final street based on River of Blood rules
         final_street = 5
@@ -44,6 +51,7 @@ class PokerGameManager:
             self.settings.STARTING_STACK - self.settings.SMALL_BLIND,
             self.settings.STARTING_STACK - self.settings.BIG_BLIND
         ]
+        full_deck_as_strings = [str(c) for c in deck.cards]
         round_state = RoundState(
             button=0,
             street=0,
@@ -51,7 +59,7 @@ class PokerGameManager:
             pips=pips,
             stacks=stacks,
             hands=[player_cards, bot_cards],
-            deck=self.deck,
+            deck=full_deck_as_strings,
             previous_state=None
         )
 
@@ -103,6 +111,7 @@ class PokerGameManager:
                 bot_action = self.rebel_bot.get_action(dummy_game_state, next_state, 1)
                 next_state = next_state.proceed(bot_action)
                 bot_action_msg = f"Bot {self._action_to_string(bot_action)}"
+                print(f"[DEBUG] Bot's action: {bot_action_msg}")
             else:
                 bot_action_msg = "Hand complete!"
         except Exception as e:
@@ -110,6 +119,7 @@ class PokerGameManager:
             bot_action_msg = "Bot checks"
             if not isinstance(next_state, TerminalState):
                 next_state = next_state.proceed(CheckAction())
+                print("[DEBUG] Bot encountered an error and defaulted to check.")
 
         # Update session
         self._update_session_from_round_state(next_state)
@@ -117,10 +127,10 @@ class PokerGameManager:
         # Get visible board cards from appropriate state
         if isinstance(next_state, TerminalState) and next_state.previous_state:
             street = next_state.previous_state.street
-            visible_cards = next_state.previous_state.deck.peek(street) if street > 0 else []
+            visible_cards = next_state.previous_state.deck[:street] if street > 0 else []
         else:
             street = next_state.street if not isinstance(next_state, TerminalState) else 0
-            visible_cards = next_state.deck.peek(street) if street > 0 else []
+            visible_cards = next_state.deck[:street] if street > 0 else []
         
         return {
             'pot': self.session.pot,
@@ -182,7 +192,8 @@ class PokerGameManager:
             
             # Get final board cards from previous state
             if round_state.previous_state and round_state.previous_state.street > 0:
-                visible_cards = round_state.previous_state.deck.peek(round_state.previous_state.street)
+                street = round_state.previous_state.street
+                visible_cards = round_state.previous_state.deck[:street]
                 self.session.board_cards = [str(card) for card in visible_cards]
         else:
             # Update session with current state
@@ -192,7 +203,7 @@ class PokerGameManager:
             
             # Update board cards if we're past preflop
             if round_state.street > 0:
-                visible_cards = round_state.deck.peek(round_state.street)
+                visible_cards = round_state.deck[:round_state.street]
                 self.session.board_cards = [str(card) for card in visible_cards]
             
             # Update street name
@@ -249,23 +260,21 @@ class PokerGameManager:
             'pips': round_state.pips,
             'stacks': round_state.stacks,
             'hands': [[str(c) for c in h] for h in round_state.hands],
-            'deck': [str(c) for c in round_state.deck.cards]
+            'deck': [str(c) for c in round_state.deck]
         }
 
     def _deserialize_game_state(self, state_dict):
+        """Load deck/hands back as strings, which player.py wants."""
         if state_dict.get('terminal', False):
-            return None  # Handle terminal state appropriately
-            
-        deck = eval7.Deck()
-        deck.cards = [eval7.Card(c) for c in state_dict['deck']]
-        
+            return None
+
         return RoundState(
             button=state_dict['button'],
             street=state_dict['street'],
             final_street=state_dict['final_street'],
             pips=state_dict['pips'],
             stacks=state_dict['stacks'],
-            hands=[[eval7.Card(c) for c in h] for h in state_dict['hands']],
-            deck=deck,
+            hands=state_dict['hands'],  # list-of-lists of strings
+            deck=state_dict['deck'],    # list of strings
             previous_state=None
         )
