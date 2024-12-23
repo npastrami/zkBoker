@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Poker Game vs ReBeL Bot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .game-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+
+        .game-info div {
+            text-align: center;
+        }
+
+        .game-info .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .cards-section {
+            margin: 20px 0;
+        }
+
+        .cards-section h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .cards-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            position: relative;
+            width: 70px;
+            height: 100px;
+            background: white;
+            border: 2px solid #333;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 5px;
+        }
+    
+        .card-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+    
+        .card-suit {
+            font-size: 28px;
+        }
+    
+        .hearts, .diamonds {
+            color: #e74c3c;
+        }
+    
+        .clubs, .spades {
+            color: #2c3e50;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .fold-button {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .call-button {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .raise-button {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .control-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        .start-button {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .exit-button {
+            background-color: #c0392b;
+            color: white;
+        }
+
+        .button:hover {
+            opacity: 0.9;
+        }
+
+        .button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        #raise-amount {
+            width: 100px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .game-message {
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="title">Poker Game vs ReBeL Bot</h1>
+        
+        <div class="game-info">
+            <div>
+                <p>Pot</p>
+                <p class="value" id="pot">$<span>{{ pot }}</span></p>
+            </div>
+            <div>
+                <p>Your Stack</p>
+                <p class="value" id="player-stack">$<span>{{ player_stack }}</span></p>
+            </div>
+            <div>
+                <p>Bot Stack</p>
+                <p class="value" id="bot-stack">$<span>{{ bot_stack }}</span></p>
+            </div>
+        </div>
+        
+        <div class="cards-section">
+            <h3>Board Cards:</h3>
+            <div class="cards-container" id="board-cards">
+                {% for card in board_cards %}
+                    <div class="card">
+                        <span class="card-value">{{ card.value }}</span>
+                        <span class="card-suit {{ card.suit }}">{{ card.suit_symbol }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="cards-section">
+            <h3>Your Cards:</h3>
+            <div class="cards-container" id="player-cards">
+                {% for card in player_cards %}
+                    <div class="card">
+                        <span class="card-value">{{ card.value }}</span>
+                        <span class="card-suit {{ card.suit }}">{{ card.suit_symbol }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="game-message" id="game-message">
+            <!-- Game messages will appear here -->
+        </div>
+        
+        <div class="action-buttons">
+            <button class="button fold-button" onclick="makeMove('fold')" disabled>Fold</button>
+            <button class="button call-button" onclick="makeMove('call')" disabled>Call</button>
+            <button class="button raise-button" onclick="makeMove('raise')" disabled>Raise</button>
+            <input type="number" id="raise-amount" placeholder="Raise amount" min="1" max="200" disabled>
+        </div>
+
+        <div class="control-buttons">
+            <button class="button start-button" onclick="startNewHand()">Start New Hand</button>
+            <button class="button exit-button" onclick="exitGame()" disabled>Exit Game</button>
+        </div>
+    </div>
+
+    <script>
+        let gameInProgress = false;
+        const sessionId = '{{ session_id }}';
+
+        function startNewHand() {
+            gameInProgress = true;
+            fetch('/start_hand/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    session_id: sessionId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                updateGameState(data);
+                enableGameButtons(true);
+                document.querySelector('.start-button').disabled = true;
+                document.querySelector('.exit-button').disabled = true;
+            });
+        }
+
+        function exitGame() {
+            if (!gameInProgress) {
+                window.location.href = '/';
+            }
+        }
+
+        function makeMove(action) {
+            const amount = action === 'raise' ? 
+                document.getElementById('raise-amount').value : 0;
+                
+            fetch('/make_move/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    action: action,
+                    amount: parseInt(amount)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                updateGameState(data);
+                if (data.hand_complete) {
+                    handleHandComplete();
+                }
+            });
+        }
+
+        function handleHandComplete() {
+            gameInProgress = false;
+            enableGameButtons(false);
+            document.querySelector('.start-button').disabled = false;
+            document.querySelector('.exit-button').disabled = false;
+            
+            const message = document.getElementById('game-message');
+            message.style.display = 'block';
+            message.textContent = 'Hand complete! Choose "Start New Hand" to continue or "Exit" to leave the game.';
+        }
+
+        function enableGameButtons(enabled) {
+            document.querySelectorAll('.action-buttons button').forEach(button => {
+                button.disabled = !enabled;
+            });
+            document.getElementById('raise-amount').disabled = !enabled;
+        }
+
+        function updateGameState(state) {
+            document.getElementById('pot').textContent = `$${state.pot}`;
+            document.getElementById('player-stack').textContent = `$${state.player_stack}`;
+            document.getElementById('bot-stack').textContent = `$${state.bot_stack}`;
+            
+            // Update cards
+            updateCards('board-cards', state.board_cards);
+            updateCards('player-cards', state.player_cards);
+        }
+
+        function updateCards(containerId, cards) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            cards.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card';
+                
+                const valueSpan = document.createElement('span');
+                valueSpan.className = 'card-value';
+                valueSpan.textContent = card.value;
+                
+                const suitSpan = document.createElement('span');
+                suitSpan.className = `card-suit ${card.suit}`;
+                suitSpan.textContent = card.suit_symbol;
+                
+                cardElement.appendChild(valueSpan);
+                cardElement.appendChild(suitSpan);
+                container.appendChild(cardElement);
+            });
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>
