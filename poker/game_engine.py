@@ -25,12 +25,31 @@ class RoundState(namedtuple('_RoundState', ['button', 'street', 'final_street', 
     '''
     Encodes the game tree for one round of poker.
     '''
+    # def showdown(self):
+    #     '''
+    #     Compares the players' hands and computes payoffs.
+    #     '''
+    #     score0 = eval7.evaluate(self.deck.peek(self.final_street) + self.hands[0])
+    #     score1 = eval7.evaluate(self.deck.peek(self.final_street) + self.hands[1])
+    #     if score0 > score1:
+    #         delta = STARTING_STACK - self.stacks[1]
+    #     elif score0 < score1:
+    #         delta = self.stacks[0] - STARTING_STACK
+    #     else:  # split the pot
+    #         delta = (self.stacks[0] - self.stacks[1]) // 2
+    #     return TerminalState([delta, -delta], self)
     def showdown(self):
         '''
         Compares the players' hands and computes payoffs.
         '''
-        score0 = eval7.evaluate(self.deck.peek(self.final_street) + self.hands[0])
-        score1 = eval7.evaluate(self.deck.peek(self.final_street) + self.hands[1])
+        # Convert string cards back to eval7 Card objects for evaluation
+        board_cards = [eval7.Card(card) for card in self.deck[:self.final_street]]
+        hand0 = [eval7.Card(card) for card in self.hands[0]]
+        hand1 = [eval7.Card(card) for card in self.hands[1]]
+        
+        score0 = eval7.evaluate(board_cards + hand0)
+        score1 = eval7.evaluate(board_cards + hand1)
+        
         if score0 > score1:
             delta = STARTING_STACK - self.stacks[1]
         elif score0 < score1:

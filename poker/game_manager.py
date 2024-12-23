@@ -41,9 +41,9 @@ class PokerGameManager:
         
         # Determine final street based on River of Blood rules
         final_street = 5
-        while self.deck.cards[final_street-1].suit in [1, 2]:  # Diamond or Heart
-            final_street += 1
-        final_street = min(final_street, 48)
+        # while self.deck.cards[final_street-1].suit in [1, 2]:  # Diamond or Heart
+        #     final_street += 1
+        # final_street = min(final_street, 48)
 
         # Initialize game state
         pips = [self.settings.SMALL_BLIND, self.settings.BIG_BLIND]
