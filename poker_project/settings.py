@@ -118,10 +118,15 @@ AUTH_USER_MODEL = 'poker.CustomUser'
 # Authentication Settings
 LOGIN_REDIRECT_URL = '/'  # Where to redirect after successful login
 LOGOUT_REDIRECT_URL = '/'  # Where to redirect after logout
-LOGIN_URL = '/login/'  # The login page URL
+LOGIN_URL = '/accounts/login/'  # The login page URL
 
 # Email Settings (for development)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # This will output emails to console
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'zkBoker@gmail.com'
+EMAIL_HOST_PASSWORD = 'pxvy aczz thtw hqfq'
 DEFAULT_FROM_EMAIL = 'noreply@zkboker.com'
 
 # Static files (CSS, JavaScript, Images)

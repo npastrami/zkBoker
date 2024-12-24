@@ -1,4 +1,6 @@
+{% extends 'base.html' %}
 {% load static %}
+{% block content %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -20,10 +22,10 @@
             {% endif %}
             
             <div class="form-group">
-                <label for="id_username_or_email">Email or username</label>
+                <label for="id_email">Email or username</label>
                 {{ form.username_or_email }}
                 {% if form.username_or_email.errors %}
-                <div class="error-message">{{ form.username_or_email.errors }}</div>
+                    <div class="error-message">{{ form.username_or_email.errors }}</div>
                 {% endif %}
             </div>
             
@@ -45,3 +47,4 @@
     </div>
 </body>
 </html>
+{% endblock %}

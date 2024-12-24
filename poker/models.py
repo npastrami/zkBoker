@@ -9,7 +9,7 @@ class CustomUser(AbstractUser):
     verification_token = models.CharField(max_length=100, blank=True)
     
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    REQUIRED_FIELDS = ['']
     
     def __str__(self):
         return self.email
