@@ -1,0 +1,23 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sign Up Success - zkBoker</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/auth.css' %}">
+</head>
+<body>
+    <div class="auth-container">
+        <h1 class="title">Registration Successful!</h1>
+        
+        <div class="success-message">
+            <h2>🎉 Welcome to zkBoker!</h2>
+            <p>Your account has been created successfully.</p>
+            <p>Please check your email to verify your account.</p>
+        </div>
+        
+        <div class="links">
+            <a href="{% url 'login' %}">Proceed to Login</a>
+        </div>
+    </div>
+</body>
+</html>
