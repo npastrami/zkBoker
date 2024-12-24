@@ -11,7 +11,7 @@ urlpatterns = [
     path('start_hand/', views.start_hand, name='start_hand'),
     
     path('signup/', views.signup, name='signup'),
-    path('login/', views.user_login, name='login'),
+    path('accounts/login/', views.user_login, name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='poker:login'), name='logout'),
     path('verify/<str:token>/', views.verify_email, name='verify_email'),
 ]

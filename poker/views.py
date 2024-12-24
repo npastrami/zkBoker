@@ -81,7 +81,7 @@ def verify_email(request, token):
         user.email_verified = True
         user.verification_token = ''
         user.save()
-        return render(request, 'registration/verification_success.html')
+        return render(request, 'registration/verification_successful.html')
     except CustomUser.DoesNotExist:
         return render(request, 'registration/verification_failed.html')
 

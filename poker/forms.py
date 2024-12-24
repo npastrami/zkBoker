@@ -13,21 +13,20 @@ class CustomUserCreationForm(UserCreationForm):
 
 class LoginForm(forms.Form):
     username_or_email = forms.CharField(
-        label="Username or Email",
-        widget=forms.TextInput(attrs={'placeholder': 'Enter username or email'})
+        label='Email or username',
+        max_length=150,
+        widget=forms.TextInput(attrs={'placeholder': 'Email or username'})
     )
-    password = forms.CharField(widget=forms.PasswordInput)
+    password = forms.CharField(
+        label='Password',
+        widget=forms.PasswordInput(attrs={'placeholder': 'Password'})
+    )
 
     def clean_username_or_email(self):
-        username_or_email = self.cleaned_data.get('username_or_email')
-        if '@' in username_or_email:
-            try:
-                CustomUser.objects.get(email=username_or_email)
-            except CustomUser.DoesNotExist:
-                raise ValidationError("No user found with this email address.")
-        else:
-            try:
-                CustomUser.objects.get(username=username_or_email)
-            except CustomUser.DoesNotExist:
-                raise ValidationError("No user found with this username.")
-        return username_or_email
+        email = self.cleaned_data.get('email')
+        
+        try:
+            CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            raise ValidationError("No user found with this email address.")
+        return email
