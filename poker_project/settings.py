@@ -55,7 +55,7 @@ ROOT_URLCONF = 'poker_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -112,11 +112,27 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Custom User Model
+AUTH_USER_MODEL = 'poker.CustomUser'
+
+# Authentication Settings
+LOGIN_REDIRECT_URL = '/'  # Where to redirect after successful login
+LOGOUT_REDIRECT_URL = '/'  # Where to redirect after logout
+LOGIN_URL = '/login/'  # The login page URL
+
+# Email Settings (for development)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # This will output emails to console
+DEFAULT_FROM_EMAIL = 'noreply@zkboker.com'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
+# Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'staticfiles'  # This is where your CSS currently is
+]
+STATIC_ROOT = BASE_DIR / 'staticfiles_build'  # Changed to avoid confusion
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

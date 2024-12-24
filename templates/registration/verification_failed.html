@@ -1,0 +1,24 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verification Failed - zkBoker</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/auth.css' %}">
+</head>
+<body>
+    <div class="auth-container">
+        <h1 class="title">Verification Failed</h1>
+        
+        <div class="error-container">
+            <h2>❌ Oops!</h2>
+            <p>The verification link is invalid or has expired.</p>
+            <p>Please try signing up again.</p>
+        </div>
+        
+        <div class="links">
+            <a href="{% url 'signup' %}" class="button">Sign Up Again</a>
+        </div>
+    </div>
+</body>
+</html>
+Improve
