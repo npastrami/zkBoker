@@ -46,3 +46,12 @@ def make_move(request):
         return JsonResponse(response_data)
     
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+@login_required
+def home_view(request):
+    return render(request, 'poker/home.html')
+
+@login_required
+def staking_view(request):
+    return render(request, 'poker/staking.html')
