@@ -1,4 +1,3 @@
-<!-- base.html -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,18 +6,24 @@
     <link rel="stylesheet" href="{% static 'css/auth.css' %}">
 </head>
 <body>
-    <header>
-        <!-- Show user / logout link in top-right -->
-        {% if user.is_authenticated %}
-            <div style="float: right;">
-                Logged in as {{ user.username }} | 
-                <a href="{% url 'users:logout' %}">Logout</a>
-            </div>
-        {% endif %}
-    </header>
+    {% if user.is_authenticated %}
+    <div class="top-bar">
+        <div class="nav-left">
+            <a href="{% url 'poker:home' %}" class="nav-link">Home</a>
+            <a href="{% url 'poker:game' %}" class="nav-link">Games</a>
+            <a href="{% url 'poker:staking' %}" class="nav-link">Staking</a>
+        </div>
+        <div class="auth-info">
+            <span class="coin">🪙 {{ user.coins }}</span>
+            <span class="gem">💎 {{ user.gems }}</span>
+            <span>{{ user.username }}</span>
+            <a href="{% url 'users:logout' %}" class="logout-link">Logout</a>
+        </div>
+    </div>
+    {% endif %}
 
-    <main>
+    <div class="main-content">
         {% block content %}{% endblock %}
-    </main>
+    </div>
 </body>
 </html>

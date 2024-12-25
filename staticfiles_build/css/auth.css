@@ -1,4 +1,4 @@
-/* templates/registration/css/auth.css */
+/* Base styles */
 body {
     font-family: Arial, sans-serif;
     background-color: #f0f0f0;
@@ -6,6 +6,70 @@ body {
     padding: 20px;
 }
 
+/* Header/Navigation styles */
+.top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: white;
+    padding: 10px 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 1000;
+    height: 40px;
+    display: flex;
+    justify-content: space-between; /* This separates left and right content */
+    align-items: center;
+    width: 100%;
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 1;
+}
+
+.nav-link {
+    color: #333;
+    text-decoration: none;
+    padding: 5px 10px;
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    color: #3498db;
+}
+
+.auth-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    white-space: nowrap;
+}
+
+.coin {
+    color: #FFD700;
+    font-weight: 500;
+    display: inline-flex;
+}
+
+.gem {
+    color: #00CED1;
+    font-weight: 500;
+    display: inline-flex;
+}
+
+.logout-link {
+    color: #dc3545;
+    text-decoration: none;
+}
+
+.logout-link:hover {
+    text-decoration: underline;
+}
+
+/* Auth container styles */
 .auth-container {
     max-width: 400px;
     margin: 40px auto;
