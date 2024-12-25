@@ -6,6 +6,9 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.shortcuts import render, redirect
 from .models import CustomUser
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 
 def signup(request):
     if request.method == 'POST':
@@ -62,3 +65,20 @@ def user_login(request):
 def user_logout(request):
     logout(request)
     return redirect('users:login')
+
+@login_required
+@require_POST
+def add_coins(request):
+    try:
+        user = request.user
+        user.add_coins(1000)  # Using the model method
+        return JsonResponse({
+            'success': True,
+            'new_balance': user.coins,
+            'message': 'Successfully added 1000 coins!'
+        })
+    except ValueError as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)

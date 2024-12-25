@@ -10,4 +10,5 @@ urlpatterns = [
     path('login/', views.user_login, name='login'),
     path('logout/', views.user_logout, name='logout'),
     path('verify/<str:token>/', views.verify_email, name='verify_email'),
+    path('add-coins/', views.add_coins, name='add_coins'),
 ]
