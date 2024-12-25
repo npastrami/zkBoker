@@ -9,7 +9,7 @@ import json
 @login_required
 def initialize_game(request):
     """Initialize a new game session"""
-    session = GameSession.objects.create()
+    session = GameSession.objects.create(player=request.user)
     
     return render(request, 'poker/game.html', {
         'session_id': session.session_id,
@@ -18,13 +18,14 @@ def initialize_game(request):
         'pot': session.pot,
         'board_cards': [],
         'player_cards': [],
-        'game_message': 'Click "Start New Hand" to begin playing!'
+        'game_message': 'Click "Start New Hand" to begin playing!',
+        'player': request.user
     })
 
 def start_hand(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        session = GameSession.objects.get(session_id=data.get('session_id'))
+        session = GameSession.objects.get(session_id=data.get('session_id'), player=request.user)
         game_manager = PokerGameManager(session)
         
         response_data = game_manager.start_new_hand()
@@ -35,7 +36,7 @@ def start_hand(request):
 def make_move(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        session = GameSession.objects.get(session_id=data.get('session_id'))
+        session = GameSession.objects.get(session_id=data.get('session_id'), player=request.user)
         game_manager = PokerGameManager(session)
         
         response_data = game_manager.process_player_action(
@@ -47,6 +48,45 @@ def make_move(request):
     
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
+@login_required
+def buy_in(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method'})
+    data = json.loads(request.body)
+    session = GameSession.objects.get(
+        session_id=data.get('session_id'),
+        player=request.user
+    )
+    game_manager = PokerGameManager(session)
+    success, message = game_manager.process_buy_in()
+    return JsonResponse({
+        'success': success,
+        'message': message
+    })
+
+@login_required
+def exit_game(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request method'}) 
+    data = json.loads(request.body)
+    session = GameSession.objects.get(
+        session_id=data.get('session_id'),
+        player=request.user
+    )
+    # Create game manager with the correct player instance
+    game_manager = PokerGameManager(session)
+    
+    # Process the exit and get remaining coins
+    remaining_coins = game_manager.process_exit_game()
+    
+    # Get the updated coin balance
+    updated_balance = request.user.coins
+    return JsonResponse({
+        'success': True,
+        'message': f'Game exited successfully. {remaining_coins} coins returned to your account.',
+        'coins_returned': remaining_coins,
+        'current_coins': updated_balance
+    })
 
 @login_required
 def home_view(request):

@@ -7,9 +7,11 @@ from .rebel.player import ReBeL
 class PokerGameManager:
     def __init__(self, session):
         self.session = session
+        self.player = session.player
         self.deck = eval7.Deck()
         self.settings = PokerSettings()
         self.rebel_bot = ReBeL()
+        self.buy_in_amount = 200
 
     def _convert_action_to_string(self, action_type):
         """Convert action class to string representation"""
@@ -25,9 +27,52 @@ class PokerGameManager:
         """Convert legal actions to string list"""
         legal_actions = round_state.legal_actions()
         return [self._convert_action_to_string(action) for action in legal_actions]
+    
+    def validate_buy_in(self):
+        """Validate if player has enough coins for buy-in"""
+        return self.player.coins >= self.buy_in_amount
+
+    def process_buy_in(self):
+        """Process the buy-in transaction"""
+        if not self.validate_buy_in():
+            return False, "Insufficient coins for buy-in"
+        
+        try:
+            self.player.remove_coins(self.buy_in_amount)
+            self.session.current_coins = self.buy_in_amount
+            self.session.save()
+            return True, "Buy-in successful"
+        except ValueError as e:
+            return False, str(e)
+
+    def process_exit_game(self):
+        """Process player exit and return remaining coins"""
+        try:
+            # Get remaining stack
+            remaining_stack = self.session.player_stack
+            if remaining_stack > 0:
+                # Add coins back to player's account
+                self.player.add_coins(remaining_stack)
+                
+                # Update session
+                self.session.current_coins = 0
+                self.session.player_stack = 0
+                self.session.save()
+                
+                print(f"Successfully returned {remaining_stack} coins to {self.player.username}")
+                return remaining_stack
+            return 0
+        except Exception as e:
+            print(f"Error in process_exit_game: {str(e)}")
+            raise e
 
     def start_new_hand(self):
         """Initialize a new hand of poker"""
+        if not hasattr(self.session, 'current_coins') or self.session.current_coins == 0:
+            return {
+                'requires_buy_in': True,
+                'buy_in_amount': self.buy_in_amount
+            }
         self.deck.shuffle()
         player_cards = self.deck.deal(2)
         bot_cards = self.deck.deal(2)
@@ -39,13 +84,10 @@ class PokerGameManager:
         player_cards = [str(c) for c in player_cards]
         bot_cards = [str(c) for c in bot_cards]
         
-        # Determine final street based on River of Blood rules
+        # final street
         final_street = 5
-        # while self.deck.cards[final_street-1].suit in [1, 2]:  # Diamond or Heart
-        #     final_street += 1
-        # final_street = min(final_street, 48)
 
-        # Initialize game state
+        # init game state
         pips = [self.settings.SMALL_BLIND, self.settings.BIG_BLIND]
         stacks = [
             self.settings.STARTING_STACK - self.settings.SMALL_BLIND,
@@ -74,6 +116,7 @@ class PokerGameManager:
         self.session.save()
 
         return {
+            'requires_buy_in': False,
             'pot': self.session.pot,
             'player_stack': self.session.player_stack,
             'bot_stack': self.session.bot_stack,

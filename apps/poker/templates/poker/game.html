@@ -230,13 +230,89 @@
             <button class="button exit-button" onclick="exitGame()" disabled>Exit Game</button>
         </div>
     </div>
+    <div id="buyInModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Buy-in Required</h2>
+            <p>Would you like to buy-in for 200 coins?</p>
+            <p>Your current balance: {{ user.coins }} coins</p>
+            <div class="modal-buttons">
+                <button class="button" onclick="confirmBuyIn()">Yes</button>
+                <button class="button" onclick="cancelBuyIn()">No</button>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+    
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+            text-align: center;
+        }
+    
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+    </style>
 
     <script>
         let gameInProgress = false;
         const sessionId = '{{ session_id }}';
 
+        function showBuyInModal() {
+            document.getElementById('buyInModal').style.display = 'block';
+        }
+    
+        function hideBuyInModal() {
+            document.getElementById('buyInModal').style.display = 'none';
+        }
+    
+        function confirmBuyIn() {
+            fetch('/buy_in/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    session_id: sessionId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    hideBuyInModal();
+                    startNewHandAfterBuyIn();
+                } else {
+                    alert(data.message);
+                    hideBuyInModal();
+                }
+            });
+        }
+    
+        function cancelBuyIn() {
+            hideBuyInModal();
+        }
+
         function startNewHand() {
-            gameInProgress = true;
             fetch('/start_hand/', {
                 method: 'POST',
                 headers: {
@@ -249,17 +325,93 @@
             })
             .then(response => response.json())
             .then(data => {
+                if (data.requires_buy_in) {
+                    showBuyInModal();
+                } else {
+                    gameInProgress = true;
+                    // Only update game state if we have valid data
+                    if (data.pot !== undefined) {
+                        updateGameState(data);
+                        enableGameButtons(true);
+                        document.querySelector('.start-button').disabled = true;
+                        document.querySelector('.exit-button').disabled = false;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const message = document.getElementById('game-message');
+                message.style.display = 'block';
+                message.textContent = 'Error starting new hand. Please try again.';
+            });
+        }
+        
+        // Add this new function to handle starting a new hand after successful buy-in
+        function startNewHandAfterBuyIn() {
+            fetch('/start_hand/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    session_id: sessionId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                gameInProgress = true;
                 updateGameState(data);
                 enableGameButtons(true);
                 document.querySelector('.start-button').disabled = true;
-                document.querySelector('.exit-button').disabled = true;
+                document.querySelector('.exit-button').disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const message = document.getElementById('game-message');
+                message.style.display = 'block';
+                message.textContent = 'Error starting new hand. Please try again.';
             });
         }
 
         function exitGame() {
-            if (!gameInProgress) {
-                window.location.href = '/';
+            if (gameInProgress) {
+                if (!confirm('Are you sure you want to exit? Your remaining stack will be converted to coins.')) {
+                    return;
+                }
             }
+            
+            console.log('Attempting to exit game...');  // Debug log
+            
+            fetch('/exit_game/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    session_id: sessionId
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Exit game response:', data);  // Debug log
+                if (data.success) {
+                    alert(`Game exited successfully! ${data.coins_returned} coins have been returned to your account.`);
+                    window.location.href = '/';
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error in exitGame:', error);  // Debug log
+                alert('Error exiting game. Please try again.');
+            });
         }
 
         function makeMove(action) {

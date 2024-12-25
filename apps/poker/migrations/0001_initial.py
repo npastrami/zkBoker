@@ -19,8 +19,8 @@ class Migration(migrations.Migration):
             name='GameSession',
             fields=[
                 ('session_id', models.UUIDField(default=uuid.uuid4, primary_key=True, serialize=False)),
-                ('player_stack', models.IntegerField(default=200)),
-                ('bot_stack', models.IntegerField(default=200)),
+                ('player_stack', models.IntegerField(default=0)),
+                ('bot_stack', models.IntegerField(default=0)),
                 ('current_street', models.CharField(max_length=20)),
                 ('pot', models.IntegerField(default=0)),
                 ('player_cards', models.JSONField(default=list)),
