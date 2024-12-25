@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'poker',
+    'apps.poker.apps.PokerConfig',
+    'apps.users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
@@ -113,12 +114,12 @@ USE_I18N = True
 USE_TZ = True
 
 # Custom User Model
-AUTH_USER_MODEL = 'poker.CustomUser'
+AUTH_USER_MODEL = 'users.CustomUser'
 
 # Authentication Settings
-LOGIN_REDIRECT_URL = '/'  # Where to redirect after successful login
-LOGOUT_REDIRECT_URL = '/'  # Where to redirect after logout
-LOGIN_URL = '/accounts/login/'  # The login page URL
+LOGIN_URL = 'users:login'
+LOGIN_REDIRECT_URL = 'poker:initialize_game'
+LOGOUT_REDIRECT_URL = 'users:login'
 
 # Email Settings (for development)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

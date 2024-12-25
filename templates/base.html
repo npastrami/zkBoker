@@ -12,7 +12,7 @@
         {% if user.is_authenticated %}
             <div style="float: right;">
                 Logged in as {{ user.username }} | 
-                <a href="{% url 'poker:logout' %}">Logout</a>
+                <a href="{% url 'users:logout' %}">Logout</a>
             </div>
         {% endif %}
     </header>
