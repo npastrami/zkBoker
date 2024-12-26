@@ -5,7 +5,7 @@ import eval7
 # Game constants
 SMALL_BLIND = 1
 BIG_BLIND = 2
-STARTING_STACK = 400
+STARTING_STACK = 200
 STREET_NAMES = ['Flop', 'Turn', 'River']
 
 # Action types
