@@ -6,10 +6,9 @@ from . import views
 app_name = 'poker'
 
 urlpatterns = [
-    path('', views.initialize_game, name='initialize_game'),
+    path('', views.home_view, name='home'),
     path('make_move/', views.make_move, name='make_move'),
     path('start_hand/', views.start_hand, name='start_hand'),
-    path('', views.home_view, name='home'),
     path('game/', views.initialize_game, name='game'),
     path('staking/', views.staking_view, name='staking'),
     path('buy_in/', views.buy_in, name='buy_in'),
