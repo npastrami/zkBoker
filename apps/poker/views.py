@@ -5,11 +5,14 @@ from django.http import JsonResponse
 from .models import GameSession
 from .game_manager import PokerGameManager
 import json
+from apps.users.models import CustomUser
 
 @login_required
 def initialize_game(request):
     """Initialize a new game session"""
-    session = GameSession.objects.create(player=request.user)
+    # Get fresh user object to ensure we have the latest coin balance
+    user = CustomUser.objects.get(id=request.user.id)
+    session = GameSession.objects.create(player=user)
     
     return render(request, 'poker/game.html', {
         'session_id': session.session_id,
@@ -19,7 +22,7 @@ def initialize_game(request):
         'board_cards': [],
         'player_cards': [],
         'game_message': 'Click "Start New Hand" to begin playing!',
-        'player': request.user
+        'user': user  # Pass the fresh user object to the template
     })
 
 def start_hand(request):
@@ -28,7 +31,10 @@ def start_hand(request):
         session = GameSession.objects.get(session_id=data.get('session_id'), player=request.user)
         game_manager = PokerGameManager(session)
         
-        response_data = game_manager.start_new_hand()
+        # Pass continue_session flag to start_new_hand
+        continue_session = data.get('continue_session', False)
+        response_data = game_manager.start_new_hand(continue_session)
+        
         return JsonResponse(response_data)
     
     return JsonResponse({'error': 'Invalid request'}, status=400)
@@ -52,6 +58,7 @@ def make_move(request):
 def buy_in(request):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Invalid request method'})
+    
     data = json.loads(request.body)
     session = GameSession.objects.get(
         session_id=data.get('session_id'),
@@ -59,10 +66,20 @@ def buy_in(request):
     )
     game_manager = PokerGameManager(session)
     success, message = game_manager.process_buy_in()
-    return JsonResponse({
-        'success': success,
-        'message': message
-    })
+    
+    if success:
+        # Get the updated user object to ensure we have the latest coin balance
+        user = CustomUser.objects.get(id=request.user.id)
+        return JsonResponse({
+            'success': True,
+            'message': message,
+            'updated_balance': user.coins  # This will have the new balance
+        })
+    else:
+        return JsonResponse({
+            'success': False,
+            'message': message
+        })
 
 @login_required
 def exit_game(request):

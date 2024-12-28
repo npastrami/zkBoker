@@ -299,8 +299,16 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    // Update the coins display in the top bar
+                    const coinDisplay = document.querySelector('.coin');
+                    coinDisplay.textContent = `🪙 ${data.updated_balance}`;
+                    
                     hideBuyInModal();
                     startNewHandAfterBuyIn();
+                    
+                    // Update button text
+                    const startButton = document.querySelector('.start-button');
+                    startButton.textContent = 'Next Hand';
                 } else {
                     alert(data.message);
                     hideBuyInModal();
@@ -320,7 +328,8 @@
                     'X-CSRFToken': getCookie('csrftoken')
                 },
                 body: JSON.stringify({
-                    session_id: sessionId
+                    session_id: sessionId,
+                    continue_session: gameInProgress
                 })
             })
             .then(response => response.json())
@@ -329,12 +338,21 @@
                     showBuyInModal();
                 } else {
                     gameInProgress = true;
-                    // Only update game state if we have valid data
                     if (data.pot !== undefined) {
                         updateGameState(data);
                         enableGameButtons(true);
-                        document.querySelector('.start-button').disabled = true;
+                        
+                        // Update button text
+                        const startButton = document.querySelector('.start-button');
+                        startButton.textContent = 'Next Hand';
+                        startButton.disabled = true;
+                        
                         document.querySelector('.exit-button').disabled = false;
+                        
+                        // Show game message
+                        const message = document.getElementById('game-message');
+                        message.style.display = 'block';
+                        message.textContent = data.game_message || 'Your turn! Choose your action.';
                     }
                 }
             })
@@ -440,14 +458,14 @@
         }
 
         function handleHandComplete() {
-            gameInProgress = false;
+            gameInProgress = true;  // Keep true since we're continuing the session
             enableGameButtons(false);
             document.querySelector('.start-button').disabled = false;
             document.querySelector('.exit-button').disabled = false;
             
             const message = document.getElementById('game-message');
             message.style.display = 'block';
-            message.textContent = 'Hand complete! Choose "Start New Hand" to continue or "Exit" to leave the game.';
+            message.textContent = 'Hand complete! Click "Next Hand" to continue or "Exit" to leave the game.';
         }
 
         function enableGameButtons(enabled) {
@@ -458,6 +476,7 @@
         }
 
         function updateGameState(state) {
+            // Update pot and stacks
             document.getElementById('pot').textContent = `$${state.pot}`;
             document.getElementById('player-stack').textContent = `$${state.player_stack}`;
             document.getElementById('bot-stack').textContent = `$${state.bot_stack}`;
@@ -465,6 +484,13 @@
             // Update cards
             updateCards('board-cards', state.board_cards);
             updateCards('player-cards', state.player_cards);
+            
+            // Update game message if provided
+            if (state.game_message) {
+                const message = document.getElementById('game-message');
+                message.style.display = 'block';
+                message.textContent = state.game_message;
+            }
         }
 
         function updateCards(containerId, cards) {
