@@ -1,0 +1,26 @@
+<div class="game-info">
+    <div>
+        <p>Pot</p>
+        <p class="value" id="pot">${{ pot }}</p>
+    </div>
+    <div>
+        <p>Your Stack</p>
+        <p class="value" id="player-stack">${{ player_stack }}</p>
+    </div>
+    <div>
+        <p>Bot Stack</p>
+        <p class="value" id="bot-stack">${{ bot_stack }}</p>
+    </div>
+</div>
+
+<div class="cards-section">
+    <h3>Board Cards:</h3>
+    <div class="cards-container" id="board-cards">
+        {% for card in board_cards %}
+            <div class="card">
+                <span class="card-value">{{ card.value }}</span>
+                <span class="card-suit {{ card.suit }}">{{ card.suit_symbol }}</span>
+            </div>
+        {% endfor %}
+    </div>
+</div>

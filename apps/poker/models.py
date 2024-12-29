@@ -19,3 +19,14 @@ class GameSession(models.Model):
 
     class Meta:
         db_table = 'game_sessions'
+        
+class UserCode(models.Model):
+    user = models.ForeignKey('users.CustomUser', on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    code = models.TextField()
+    language = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-updated_at']
