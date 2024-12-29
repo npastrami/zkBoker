@@ -1,0 +1,11 @@
+<div class="cards-section">
+    <h3>Your Cards:</h3>
+    <div class="cards-container" id="player-cards">
+        {% for card in player_cards %}
+            <div class="card">
+                <span class="card-value">{{ card.value }}</span>
+                <span class="card-suit {{ card.suit }}">{{ card.suit_symbol }}</span>
+            </div>
+        {% endfor %}
+    </div>
+</div>

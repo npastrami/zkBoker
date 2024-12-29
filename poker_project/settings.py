@@ -118,7 +118,7 @@ AUTH_USER_MODEL = 'users.CustomUser'
 
 # Authentication Settings
 LOGIN_URL = 'users:login'
-LOGIN_REDIRECT_URL = 'poker:initialize_game'
+LOGIN_REDIRECT_URL = 'poker:game'
 LOGOUT_REDIRECT_URL = 'users:login'
 
 # Email Settings (for development)
