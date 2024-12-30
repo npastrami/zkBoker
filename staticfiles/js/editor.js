@@ -39,19 +39,18 @@ function initializeEditor() {
     }
 
     // Set initial container size
-    container.style.height = '600px';
-    container.style.width = '80%';
-    container.style.float = 'right';
+    container.style.height = '100%';
+    container.style.width = '100%';
+    container.style.float = '';
 
     // Create editor with updated options
     editor = monaco.editor.create(container, {
         value: '# Select a skeleton file from the repository to begin\n',
         language: 'python',
         theme: 'vs-dark',
-        automaticLayout: false, // We'll handle layout manually
+        automaticLayout: true, // Let Monaco handle layout
         minimap: {
-            enabled: true,
-            maxColumn: 80
+            enabled: true
         },
         fontSize: 14,
         lineNumbers: 'on',

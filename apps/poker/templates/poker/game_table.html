@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/game_table.css' %}">
+{% csrf_token %}
+
+<div class="game-table-container">
+    <div class="table-header">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 20px;
+                margin-top: 50px;
+            }
+        </style>
+        <h1 class="title">Available Games</h1>
+        {% if user.can_add_bot %}
+        <button id="createGameBtn" class="create-game-btn">Create Game</button>
+        {% endif %}
+    </div>
+    
+    <div class="filters">
+        <div class="sort-controls">
+            <select id="sortBy">
+                <option value="posted_on">Sort by Date</option>
+                <option value="user">Sort by User</option>
+                <option value="hands">Sort by Hands</option>
+                <option value="game_type">Sort by Type</option>
+            </select>
+            <select id="gameTypeFilter">
+                <option value="all">All Types</option>
+                <option value="coins">Coins</option>
+                <option value="gems">Gems</option>
+            </select>
+        </div>
+    </div>
+
+    <table class="game-table">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Bot Name</th>
+                <th>Game Type</th>
+                <th>Remaining Hands</th>
+                <th>Posted On</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for game in available_games %}
+            <tr>
+                <td>{{ game.user.username }}</td>
+                <td>{{ game.bot_name }}</td>
+                <td>{{ game.game_type }}</td>
+                <td>{{ game.remaining_hands }}/{{ game.total_hands }}</td>
+                <td>{{ game.posted_on|date:"M d, Y H:i" }}</td>
+                <td>
+                    <button class="join-game-btn" data-game-id="{{ game.id }}">Join Game</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Join Game Modal -->
+<div id="joinGameModal" class="modal">
+    <div class="modal-content">
+        <h2>Join Game</h2>
+        <form id="joinGameForm">
+            <input type="hidden" id="selectedGameId" name="game_id">
+            
+            <div class="form-group">
+                <label for="playMode">Play Mode:</label>
+                <select id="playMode" name="play_mode">
+                    <option value="human">Play as Human</option>
+                    <option value="bot">Play with Bot</option>
+                </select>
+            </div>
+            
+            <div id="botSelectionGroup" class="form-group" style="display: none;">
+                <label for="playerBotSelect">Select Your Bot:</label>
+                <select id="playerBotSelect" name="player_bot_id">
+                    {% for bot in user.active_bots %}
+                    <option value="{{ bot.id }}">{{ bot.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="numHands">Number of Hands:</label>
+                <input type="number" id="numHands" name="num_hands" min="100" max="10000" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="initialStack">Initial Stack:</label>
+                <input type="number" id="initialStack" name="initial_stack" min="100" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="maxRebuys">Maximum Rebuys:</label>
+                <input type="number" id="maxRebuys" name="max_rebuys" min="0" required>
+            </div>
+            
+            <div class="button-group">
+                <button type="submit" class="confirm-btn">Confirm</button>
+                <button type="button" class="cancel-btn">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script type="module" src="{% static 'js/game_table.js' %}"></script>
+{% endblock %}
