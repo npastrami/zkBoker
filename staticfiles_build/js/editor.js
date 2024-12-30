@@ -39,19 +39,19 @@ function initializeEditor() {
     }
 
     // Set initial container size
-    container.style.height = '600px';
-    container.style.width = '80%';
-    container.style.float = 'right';
+    container.style.display = '';
+    container.style.height = '100%';
+    container.style.width = '100%';
+    container.style.float = '';
 
     // Create editor with updated options
     editor = monaco.editor.create(container, {
         value: '# Select a skeleton file from the repository to begin\n',
         language: 'python',
         theme: 'vs-dark',
-        automaticLayout: false, // We'll handle layout manually
+        automaticLayout: true, // Let Monaco handle layout
         minimap: {
-            enabled: true,
-            maxColumn: 80
+            enabled: true
         },
         fontSize: 14,
         lineNumbers: 'on',
@@ -222,50 +222,51 @@ function loadFile(path) {
 }
 
 function setupEventListeners() {
-    // // Setup resize functionality
-    // const resizeHandle = document.getElementById('resize-handle');
-    // const sidebar = document.getElementById('sidebar');
-    // let isResizing = false;
-    // let startX;
-    // let startWidth;
+    // Setup resize functionality
+    const resizeHandle = document.getElementById('resize-handle');
+    const sidebar = document.getElementById('sidebar');
+    let isResizing = false;
+    let startX;
+    let startWidth;
 
-    // if (resizeHandle && sidebar) {
-    //     resizeHandle.addEventListener('mousedown', (e) => {
-    //         isResizing = true;
-    //         startX = e.pageX;
-    //         startWidth = sidebar.offsetWidth;
-    //         resizeHandle.classList.add('active');
+    if (resizeHandle && sidebar) {
+        resizeHandle.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            startX = e.pageX;
+            startWidth = sidebar.offsetWidth;
+            resizeHandle.classList.add('active');
             
-    //         // Add temporary event listeners
-    //         document.addEventListener('mousemove', handleMouseMove);
-    //         document.addEventListener('mouseup', () => {
-    //             isResizing = false;
-    //             resizeHandle.classList.remove('active');
-    //             document.removeEventListener('mousemove', handleMouseMove);
-    //         }, { once: true });
-    //     });
+            // Add temporary event listeners
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', () => {
+                isResizing = false;
+                resizeHandle.classList.remove('active');
+                document.removeEventListener('mousemove', handleMouseMove);
+            }, { once: true });
+        });
 
-    //     function handleMouseMove(e) {
-    //         if (!isResizing) return;
+        function handleMouseMove(e) {
+            if (!isResizing) return;
             
-    //         const width = startWidth + (e.pageX - startX);
-    //         const containerWidth = sidebar.parentElement.offsetWidth;
-    //         const minWidth = 150; // Minimum sidebar width
-    //         const maxWidth = containerWidth * 0.8; // Maximum 80% of container
+            const width = startWidth + (e.pageX - startX);
+            const containerWidth = sidebar.parentElement.offsetWidth;
+            const minWidth = 150; // Minimum sidebar width
+            const maxWidth = containerWidth * 0.8; // Maximum 80% of container
             
-    //         // Constrain width between min and max
-    //         const newWidth = Math.min(Math.max(width, minWidth), maxWidth);
-    //         sidebar.style.width = `${newWidth}px`;
+            // Constrain width between min and max
+            const newWidth = Math.min(Math.max(width, minWidth), maxWidth);
+            sidebar.style.width = `${newWidth}px`;
             
-    //         // Ensure editor layout updates
-    //         if (editor) {
-    //             editor.layout();
-    //         }
-    //     }
-    // }
+            // Ensure editor layout updates
+            if (editor) {
+                editor.layout();
+            }
+        }
+    }
 
     // Language change handler
     const languageSelect = document.getElementById('languageSelect');
+    languageSelect.style.marginTop = '75px';
     if (languageSelect) {
         languageSelect.addEventListener('change', function(e) {
             currentLanguage = e.target.value;

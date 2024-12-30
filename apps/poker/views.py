@@ -2,9 +2,10 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from .models import GameSession
+from .models import GameSession, AvailableGame, BotRepository
 from .game_manager import PokerGameManager
 import json
+from .forms import JoinGameForm, CreateGameForm
 from django.conf import settings
 from apps.users.models import CustomUser
 from django.views.decorators.http import require_POST
@@ -13,23 +14,184 @@ import tempfile
 import os
 
 @login_required
-def initialize_game(request):
-    """Initialize a new game session"""
-    # Get fresh user object to ensure we have the latest coin balance
-    user = CustomUser.objects.get(id=request.user.id)
-    session = GameSession.objects.create(player=user)
+def game_table(request):
+    """View for displaying available games"""
+    available_games = AvailableGame.objects.filter(
+        is_active=True,
+        remaining_hands__gt=0
+    ).select_related('user', 'bot')
     
-    return render(request, 'poker/game.html', {
-        'session_id': session.session_id,
-        'player_stack': session.player_stack,
-        'bot_stack': session.bot_stack,
-        'pot': session.pot,
-        'board_cards': [],
-        'player_cards': [],
-        'game_message': 'Click "Start New Hand" to begin playing!',
-        'user': user  # Pass the fresh user object to the template
+    return render(request, 'poker/game_table.html', {
+        'available_games': available_games,
+        'join_form': JoinGameForm(),
+        'create_form': CreateGameForm()
     })
 
+@login_required
+@require_POST
+def join_game(request):
+    """Handle joining an available game"""
+    try:
+        data = json.loads(request.body)
+        form = JoinGameForm(data)
+        
+        if form.is_valid():
+            game_id = form.cleaned_data['game_id']
+            play_mode = form.cleaned_data['play_mode']
+            num_hands = form.cleaned_data['num_hands']
+            initial_stack = form.cleaned_data['initial_stack']
+            max_rebuys = form.cleaned_data['max_rebuys']
+            player_bot_id = form.cleaned_data.get('player_bot_id')
+            
+            # Get the available game
+            available_game = AvailableGame.objects.get(id=game_id, is_active=True)
+            
+            # Get player bot if in bot mode
+            player_bot = None
+            if play_mode == 'bot' and player_bot_id:
+                player_bot = BotRepository.objects.get(id=player_bot_id, user=request.user)
+            
+            # Create new game session
+            session = GameSession.objects.create(
+                player=request.user,
+                play_mode=play_mode,
+                player_bot=player_bot,
+                opponent_bot=available_game.bot,
+                player_stack=initial_stack,
+                bot_stack=available_game.initial_stack,
+                available_game=available_game,
+                hands_to_play=min(num_hands, available_game.remaining_hands),
+                player_initial_stack=initial_stack,
+                player_max_rebuys=max_rebuys
+            )
+            
+            # Update available game's remaining hands
+            available_game.remaining_hands -= num_hands
+            if available_game.remaining_hands <= 0:
+                available_game.is_active = False
+            available_game.save()
+            
+            return JsonResponse({
+                'success': True,
+                'redirect_url': f'/game/initialize/?session_id={session.session_id}'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'Invalid form data',
+                'errors': form.errors
+            })
+            
+    except AvailableGame.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Game no longer available'
+        })
+    except BotRepository.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Selected bot not found'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        })
+
+
+@login_required
+def post_bot(request):
+    """Handle posting a new bot for other players"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            total_hands = int(data.get('total_hands', 0))
+            game_type = data.get('game_type')
+            initial_stack = int(data.get('initial_stack', 0))
+            max_rebuys = int(data.get('max_rebuys', 0))
+            bot_code = data.get('bot_code')
+            
+            # Validate inputs
+            if not all([total_hands, game_type, initial_stack, bot_code]):
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Missing required fields'
+                })
+                
+            if not (100 <= total_hands <= 10000):
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Total hands must be between 100 and 10,000'
+                })
+                
+            # Create new available game
+            AvailableGame.objects.create(
+                user=request.user,
+                game_type=game_type,
+                total_hands=total_hands,
+                remaining_hands=total_hands,
+                initial_stack=initial_stack,
+                max_rebuys=max_rebuys,
+                bot_code=bot_code
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Bot posted successfully'
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': str(e)
+            })
+    
+    return JsonResponse({
+        'success': False,
+        'message': 'Invalid request method'
+    })
+
+@login_required
+def initialize_game(request):
+    """Initialize a game session after selecting a game"""
+    session_id = request.GET.get('session_id')
+    if not session_id:
+        return redirect('poker:game')
+        
+    try:
+        session = GameSession.objects.get(
+            session_id=session_id,
+            player=request.user
+        )
+        
+        # Prepare game state based on play mode
+        if session.play_mode == 'human':
+            return render(request, 'poker/game.html', {
+                'session_id': session.session_id,
+                'player_stack': session.player_stack,
+                'bot_stack': session.bot_stack,
+                'pot': session.pot,
+                'board_cards': [],
+                'player_cards': [],
+                'game_message': 'Click "Start New Hand" to begin playing!',
+                'user': request.user,
+                'hands_to_play': session.hands_to_play,
+                'hands_played': session.hands_played
+            })
+        else:
+            # Handle bot vs bot mode
+            # TODO: Implement bot vs bot gameplay
+            return render(request, 'poker/bot_game.html', {
+                'session_id': session.session_id,
+                'player_bot': session.player_bot.name,
+                'opponent_bot': session.opponent_bot.name,
+                'hands_to_play': session.hands_to_play,
+                'hands_played': session.hands_played
+            })
+            
+    except GameSession.DoesNotExist:
+        return redirect('poker:game')
+    
 def start_hand(request):
     if request.method == 'POST':
         data = json.loads(request.body)

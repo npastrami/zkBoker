@@ -19,18 +19,28 @@
 }
 
 .content-area {
-    display: flex;
-    flex: 1;
-    min-height: 0;
+    display: flex; /* Align children horizontally */
+    height: calc(100vh - 60px); /* Full height minus top-controls */
+    width: 100%; /* Full page width */
+    overflow: hidden; /* Prevent any overflow */
 }
 
 .left-panel {
-    width: 20%;
-    min-width: 200px;
+    width: 25%; /* 25% of the total width */
+    min-width: 250px; /* Minimum width for usability */
+    max-width: 350px; /* Optional: Prevent excessive expansion */
     background-color: #252526;
     display: flex;
-    flex-direction: column;
-    border-right: 1px solid #3c3c3c;
+    border-right: 1px solid #3c3c3c; /* Divider */
+    overflow-y: auto; /* Enable scrolling for content overflow */
+}
+
+.editor-container {
+    flex-grow: 1; /* Take up the remaining horizontal space */
+    display: flex; /* Necessary for child alignment */
+    background-color: #1e1e1e;
+    height: 100%; /* Match the parent's height */
+    position: relative; /* Prevent overflow issues */
 }
 
 .repo-status {
@@ -49,7 +59,7 @@
 }
 
 #monacoEditor {
-    width: 80%;
+    width: 100%;
     height: 100%;
 }
 

@@ -1,50 +1,42 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block content %}
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Login - zkBoker</title>
-    <link rel="stylesheet" type="text/css" href="{% static 'css/auth.css' %}">
-</head>
-<body>
-    <div class="auth-container">
-        <h1 class="title">zkBoker</h1>
-        <h3 class="title">Login</h3>
+<div class="auth-card">
+    <h1 class="auth-title">🃏zkBoker</h1>
+    <h3 class="auth-title">Login</h3>
+    
+    <form method="post">
+        {% csrf_token %}
         
-        <form method="post">
-            {% csrf_token %}
-            
-            {% if form.errors %}
-            <div class="error-message">
-                Invalid username or password.
-            </div>
-            {% endif %}
-            
-            <div class="form-group">
-                <label for="id_username">Username</label>
-                {{ form.username }}
-                {% if form.username.errors %}
-                    <div class="error-message">{{ form.username.errors }}</div>
-                {% endif %}
-            </div>
-            
-            <div class="form-group">
-                <label for="id_password">Password</label>
-                {{ form.password }}
-                {% if form.password.errors %}
-                <div class="error-message">{{ form.password.errors }}</div>
-                {% endif %}
-            </div>
-            
-            <button type="submit" class="button">Login</button>
-        </form>
-        
-        <div class="links">
-            <a href="{% url 'users:signup' %}">Sign Up</a>
-            <a href="{% url 'password_reset' %}">Forgot Password?</a>
+        {% if form.errors %}
+        <div class="error-message">
+            Invalid username or password.
         </div>
+        {% endif %}
+        
+        <div class="form-group">
+            <label for="id_username">Username</label>
+            {{ form.username }}
+            {% if form.username.errors %}
+                <div class="error-message">{{ form.username.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="id_password">Password</label>
+            {{ form.password }}
+            {% if form.password.errors %}
+            <div class="error-message">{{ form.password.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <button type="submit" class="auth-button">Login</button>
+    </form>
+    
+    <div class="auth-links">
+        <a href="{% url 'users:signup' %}">Sign Up</a>
+        <a href="{% url 'password_reset' %}">Forgot Password?</a>
     </div>
-</body>
-</html>
+</div>
 {% endblock %}
