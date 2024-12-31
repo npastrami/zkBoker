@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="settings-container">
+    <h1 class="settings-title">Profile Settings</h1>
+    
+    <form method="POST" enctype="multipart/form-data" class="settings-form">
+        {% csrf_token %}
+        
+        <div class="profile-section">
+            <div class="profile-picture">
+                {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="current-picture">
+                {% else %}
+                    <div class="placeholder-picture">📷</div>
+                {% endif %}
+                <div class="picture-upload">
+                    <label for="profile_picture">Change Profile Picture</label>
+                    {{ form.profile_picture }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="username">Username</label>
+                {{ form.username }}
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                {{ form.email }}
+            </div>
+
+            <div class="form-group">
+                <label for="password1">New Password</label>
+                {{ form.password1 }}
+            </div>
+
+            <div class="form-group">
+                <label for="password2">Confirm New Password</label>
+                {{ form.password2 }}
+            </div>
+        </div>
+
+        <div class="location-section">
+            <div class="form-group">
+                <label for="location">Location</label>
+                {{ form.location }}
+            </div>
+
+            <div class="form-group">
+                <label for="timezone">Timezone</label>
+                {{ form.timezone }}
+            </div>
+        </div>
+
+        <div class="links-section">
+            <div class="form-group">
+                <label for="github_link">GitHub Profile</label>
+                {{ form.github_link }}
+            </div>
+
+            <div class="form-group">
+                <label for="linkedin_link">LinkedIn Profile</label>
+                {{ form.linkedin_link }}
+            </div>
+
+            <div class="form-group">
+                <label for="website_link">Personal Website</label>
+                {{ form.website_link }}
+            </div>
+        </div>
+
+        <div class="resume-section">
+            <div class="form-group">
+                <label>Resume</label>
+                <div id="dropzone" class="dropzone">
+                    <div class="dz-message">Drop your resume here or click to upload</div>
+                    {{ form.resume }}
+                </div>
+                {% if user.resume %}
+                    <div class="current-resume">
+                        Current: {{ user.resume.name }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="user-info">
+            <div class="level-info">
+                <span>Level {{ user.user_level }}</span>
+                <div class="level-progress">
+                    <div class="progress-bar" {% if user.progress %}style="width: {{ user.progress }}%"{% else %}style="width: 0%"{% endif %}></div>
+                </div>
+            </div>
+        </div>
+
+        {% if form.errors %}
+            <div class="error-messages">
+                {{ form.errors }}
+            </div>
+        {% endif %}
+
+        <button type="submit" class="save-button">Save Changes</button>
+    </form>
+    <div class="modal" id="passwordChangeModal" style="display: none;">
+        <div class="modal-content">
+            <h2>Confirm Password Change</h2>
+            <p>Are you sure you want to change your password?</p>
+            <ul>
+                <li>You will be logged out</li>
+                <li>You will receive a verification email to confirm this change</li>
+                <li>Your account will remain locked until you verify the password update via email</li>
+            </ul>
+            <div class="modal-buttons">
+                <button type="button" class="confirm-button" onclick="confirmPasswordChange()">Yes, Change Password</button>
+                <button type="button" class="cancel-button" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>    
+</div>
+<script src="{% static 'js/settings.js' %}"></script>
+{% endblock %}

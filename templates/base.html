@@ -7,6 +7,7 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>">
     <!-- Dark mode stylesheet -->
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/settings.css' %}">
 
     <script src="{% static 'js/theme.js' %}"></script>
 </head>
@@ -22,7 +23,7 @@
             <button onclick="addCoins()" class="add-coins-btn">Claim Daily Coins! 🪙</button>
             <span class="coin">🪙 {{ user.coins }}</span>
             <span class="gem">💎 {{ user.gems }}</span>
-            <span>{{ user.username }}</span>
+            <a href="{% url 'users:settings' %}" class="username-link">{{ user.username }}</a>
             <a href="{% url 'users:logout' %}" class="logout-link">Logout</a>
         </div>
     </div>
