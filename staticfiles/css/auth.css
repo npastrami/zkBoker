@@ -48,6 +48,19 @@ body {
     margin-right: 40px;
 }
 
+.username-link {
+    color: #333;
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.username-link:hover {
+    background-color: #f0f0f0;
+    color: #3498db;
+}
+
 .coin {
     color: #FFD700;
     font-weight: 500;
