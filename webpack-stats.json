@@ -1,0 +1,21 @@
+{
+  "status": "done",
+  "assets": {
+    "editor.bundle.js": {
+      "name": "editor.bundle.js",
+      "path": "/home/npastrami/poker_project/staticfiles/js/dist/editor.bundle.js",
+      "publicPath": "/static/js/dist/editor.bundle.js"
+    },
+    "editor.bundle.js.map": {
+      "name": "editor.bundle.js.map",
+      "path": "/home/npastrami/poker_project/staticfiles/js/dist/editor.bundle.js.map",
+      "publicPath": "/static/js/dist/editor.bundle.js.map"
+    }
+  },
+  "chunks": {
+    "editor": [
+      "editor.bundle.js"
+    ]
+  },
+  "publicPath": "/static/js/dist/"
+}

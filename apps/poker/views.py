@@ -278,19 +278,49 @@ def home_view(request):
 
 @login_required
 def staking_view(request):
-    return render(request, 'poker/dev.html')
+    context = {
+        'title': 'Development Environment',
+        'disable_navigation': True  # This will help with fullscreen mode
+    }
+    return render(request, 'poker/dev.html', context)
 
 @login_required
 @require_POST
 def save_code(request):
-    data = json.loads(request.body)
-    code = data.get('code')
-    language = data.get('language')
-    
-    return JsonResponse({
-        'success': True,
-        'message': 'Code saved successfully'
-    })
+    try:
+        data = json.loads(request.body)
+        code = data.get('code')
+        language = data.get('language')
+        file_path = data.get('file_path')
+        
+        if not all([code, language, file_path]):
+            return JsonResponse({
+                'success': False,
+                'error': 'Missing required fields'
+            })
+
+        # Update path to match your project structure
+        full_path = os.path.join(settings.BASE_DIR, 'apps', 'poker', 'skeletons', file_path)
+        
+        # Security check with updated path
+        if not os.path.abspath(full_path).startswith(
+            os.path.abspath(os.path.join(settings.BASE_DIR, 'apps', 'poker', 'skeletons'))
+        ):
+            raise ValueError("Invalid file path")
+            
+        with open(full_path, 'w') as f:
+            f.write(code)
+            
+        return JsonResponse({
+            'success': True,
+            'message': 'Code saved successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
 
 @login_required
 @require_POST
@@ -396,20 +426,42 @@ def get_skeleton_files(request):
 @login_required
 def get_skeleton_file_content(request, path):
     try:
-        file_path = os.path.join(settings.BASE_DIR, 'poker', 'skeletons', path)
-        # Ensure the file is within the skeletons directory
-        if not os.path.abspath(file_path).startswith(
-            os.path.abspath(os.path.join(settings.BASE_DIR, 'poker', 'skeletons'))
-        ):
+        # Clean the path
+        clean_path = os.path.normpath(path)
+        file_path = os.path.join(settings.BASE_DIR, 'apps', 'poker', 'skeletons', clean_path)
+        
+        print(f"Attempting to read file: {file_path}")  # Debug print
+        
+        # Security check
+        skeleton_base = os.path.abspath(os.path.join(settings.BASE_DIR, 'apps', 'poker', 'skeletons'))
+        if not os.path.abspath(file_path).startswith(skeleton_base):
             raise ValueError("Invalid file path")
+        
+        if not os.path.isfile(file_path):
+            raise ValueError(f"Not a file: {file_path}")
             
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
+            
+        print(f"Successfully read file, content length: {len(content)}")  # Debug print
+            
+        # Determine language based on extension
+        extension = os.path.splitext(path)[1].lower()
+        language = {
+            '.py': 'python',
+            '.cpp': 'cpp',
+            '.h': 'cpp',
+            '.json': 'json'
+        }.get(extension, 'text')
             
         return JsonResponse({
             'success': True,
             'content': content,
-            'language': 'python' if path.endswith('.py') else 'text'
+            'language': language
         })
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        print(f"Error reading file: {str(e)}")  # Debug print
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })

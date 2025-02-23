@@ -1,32 +1,106 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block extra_head %}
+<!-- Critical styles inlined to prevent FOUC -->
+<style>
+    /* Immediate render critical styles */
+    html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        height: 100vh;
+        width: 100vw;
+    }
+    .dev-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        position: fixed;
+        top: 0;
+        left: 0;
+    }
+    .content-area {
+        display: flex;
+        flex: 1;
+        min-height: 0;
+    }
+    .monaco-editor {
+        height: 100%;
+        min-height: 0;
+    }
+    .monaco-editor:not(.initialized) {
+        visibility: hidden;
+    }
+</style>
+<!-- Rest of styles loaded after -->
+<link rel="stylesheet" href="{% static 'css/dev.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="dev-container">
     <div class="top-controls">
-        <select id="languageSelect">
+        <select id="languageSelect" class="language-select">
             <option value="python">Python</option>
             <option value="cpp">C++</option>
         </select>
         <button id="saveButton" class="save-btn">Save</button>
         <button id="runButton" class="run-btn">Run</button>
     </div>
-
     <div class="content-area">
-        <div class="left-panel">
-            <div class="repo-status" id="repoStatus">Loading skeleton repository...</div>
-            <div class="repo-list" id="repoList">
-                <!-- Will be populated dynamically -->
+        <!-- Left sidebar with file tree -->
+        <div id="sidebar" class="left-panel">
+            <div class="repo-header">
+                <div id="repoStatus" class="repo-status">Loading skeleton repository...</div>
             </div>
+            <div id="repoList" class="repo-list"></div>
         </div>
         
-        <div id="monacoEditor"></div>
+        <!-- Resize handle -->
+        <div id="resize-handle" class="resize-handle"></div>
+        
+        <!-- Editor and console area -->
+        <div class="editor-container">
+            <div id="monacoEditor"></div>
+            <div id="outputConsole"></div>
+        </div>
     </div>
-
-    <div id="outputConsole"></div>
 </div>
 
-<!-- Load Monaco Editor -->
+<!-- Monaco Editor Dependencies -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.43.0/min/vs/loader.js"></script>
+<script>
+    // Configure Monaco loader
+    require.config({ 
+        paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.43.0/min/vs' }
+    });
+
+    // Configure worker
+    window.MonacoEnvironment = {
+        getWorkerUrl: function(workerId, label) {
+            return `data:text/javascript;charset=utf-8,${encodeURIComponent(`
+                self.MonacoEnvironment = {
+                    baseUrl: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.43.0/min/'
+                };
+                importScripts('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.43.0/min/vs/base/worker/workerMain.js');`
+            )}`;
+        }
+    };
+</script>
 <script src="{% static 'js/editor.js' %}"></script>
 {% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.body.style.overflow = 'hidden';
+        const editorElem = document.getElementById('monacoEditor');
+        if (editorElem) {
+            editorElem.classList.add('loading');
+        }
+    });
+</script>
+{% endblock %}
+
