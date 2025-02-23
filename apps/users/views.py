@@ -3,7 +3,6 @@ from django.core.mail import send_mail
 from apps.users.forms import CustomUserCreationForm, LoginForm, UserSettingsForm
 import uuid
 from django.conf import settings
-from django.core.mail import send_mail
 from django.shortcuts import render, redirect
 from .models import CustomUser
 from django.http import JsonResponse
